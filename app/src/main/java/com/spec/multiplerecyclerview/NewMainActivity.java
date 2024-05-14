@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.Nullable;
@@ -24,9 +25,8 @@ public class NewMainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        int offset = dpToPx(this, 300);
+        int offset = dpToPx(this, 400);
         outerRecyclerView = findViewById(R.id.outer_recycler_view);
-        MySmoothScroller smoothScroller = new MySmoothScroller(this);
         outerRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 //        outerRecyclerView.setLayoutManager(smoothScroller.getLayoutManager());
 
@@ -35,7 +35,7 @@ public class NewMainActivity extends AppCompatActivity {
         outerAdapter = new OuterRecyclerViewAdapter(outerItems);
         outerRecyclerView.setAdapter(outerAdapter);
 
-        smoothScrollToThenBy(outerRecyclerView, 100, 0, offset);
+        smoothScrollToThenBy(outerRecyclerView, 9, 0, offset);
 //        outerRecyclerView.postDelayed(new Runnable() {
 //            @Override
 //            public void run() {
@@ -71,7 +71,7 @@ public class NewMainActivity extends AppCompatActivity {
             OuterItem outerItem = new OuterItem();
             outerItem.setCategory("Category " + (i + 1));
             List<InnerItem> innerItems = new ArrayList<>();
-            for (int j = 0; j < 3; j++) { // Vary inner item count
+            for (int j = 0; j < i+3; j++) { // Vary inner item count
                 InnerItem innerItem = new InnerItem();
                 innerItem.setTitle("Inner Item " + (j + 1));
                 innerItem.setDescription("Description for inner item");
@@ -133,6 +133,25 @@ public class NewMainActivity extends AppCompatActivity {
         }
     }
 
+//    public static void smoothScrollToThenBy(RecyclerView recyclerView, final int targetPosition, final int dx, final int dy) {
+//        recyclerView.smoothScrollToPosition(targetPosition);
+//        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//            @Override
+//            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+//                super.onScrollStateChanged(recyclerView, newState);
+//                if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+//                    recyclerView.removeOnScrollListener(this);
+//                    recyclerView.postDelayed(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            recyclerView.smoothScrollBy(dx, dy);
+//                        }
+//                    }, 100); // Adjust delay as needed (in milliseconds)
+//                }
+//            }
+//        });
+//    }
+
     public static void smoothScrollToThenBy(RecyclerView recyclerView, final int targetPosition, final int dx, final int dy) {
         recyclerView.smoothScrollToPosition(targetPosition);
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -141,14 +160,32 @@ public class NewMainActivity extends AppCompatActivity {
                 super.onScrollStateChanged(recyclerView, newState);
                 if (newState == RecyclerView.SCROLL_STATE_IDLE) {
                     recyclerView.removeOnScrollListener(this);
-                    recyclerView.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            recyclerView.smoothScrollBy(dx, dy);
+
+                    // Get LayoutManager
+                    RecyclerView.LayoutManager layoutManager = recyclerView.getLayoutManager();
+
+                    // Check if target position is valid
+                    if (targetPosition < layoutManager.getItemCount()) {
+                        // Find the target view
+                        View targetView = layoutManager.findViewByPosition(targetPosition);
+
+                        if (targetView != null) {
+                            // Calculate on-screen position (considering previous items)
+                            int targetViewTop = targetView.getTop() - recyclerView.getPaddingTop();
+
+                            recyclerView.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    // Perform smooth scroll by with adjusted offset
+                                    recyclerView.smoothScrollBy(dx, targetViewTop + dy);
+                                }
+                            }, 100); // Adjust delay as needed
                         }
-                    }, 100); // Adjust delay as needed (in milliseconds)
+                    }
                 }
             }
         });
     }
+
+
 }
